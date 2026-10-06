@@ -16,6 +16,14 @@ import java.util.Arrays;
 
 public class ReflectionUtils {
 
+    /**
+     * HiddenApiBypass can crash the whole process with a native SIGSEGV on newer Android
+     * versions. A native crash cannot be caught by try/catch, so skip the bypass entirely
+     * from this API level up. Reflection on hidden APIs then fails with normal, catchable
+     * exceptions instead of killing the app at launch.
+     */
+    private static final int SKIP_BYPASS_FROM_SDK = 36;
+
     private static boolean HIDDEN_API_REFLECTION_RESTRICTIONS_BYPASSED = Build.VERSION.SDK_INT < Build.VERSION_CODES.P;
 
     private static final String LOG_TAG = "ReflectionUtils";
@@ -26,6 +34,12 @@ public class ReflectionUtils {
      * https://developer.android.com/guide/app-compatibility/restrictions-non-sdk-interfaces
      */
     public static void bypassHiddenAPIReflectionRestrictions() {
+        if (Build.VERSION.SDK_INT >= SKIP_BYPASS_FROM_SDK) {
+            Logger.logDebug(LOG_TAG, "Skipping hidden api bypass on SDK " + Build.VERSION.SDK_INT);
+            HIDDEN_API_REFLECTION_RESTRICTIONS_BYPASSED = true;
+            return;
+        }
+
         if (!HIDDEN_API_REFLECTION_RESTRICTIONS_BYPASSED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             Logger.logDebug(LOG_TAG, "Bypassing android hidden api reflection restrictions");
             try {
