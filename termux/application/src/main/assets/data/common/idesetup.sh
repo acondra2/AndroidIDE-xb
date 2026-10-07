@@ -307,6 +307,15 @@ if [ ! command -v "$pkgm" ] &>/dev/null; then
   exit 1
 fi
 
+# The signing key of packages.androidide.com has expired and nobody renews it,
+# so apt refuses the repository. Mark only that repository as trusted.
+print_warn "Marking packages.androidide.com as trusted (its signing key has expired)"
+for list_file in "${PREFIX:-}"/etc/apt/sources.list "${PREFIX:-}"/etc/apt/sources.list.d/*.list; do
+  if [ -f "$list_file" ]; then
+    sed -i 's|^deb https://packages\.androidide\.com|deb [trusted=yes] https://packages.androidide.com|' "$list_file"
+  fi
+done
+
 # Update repositories and packages
 print_info "Update packages..."
 
