@@ -77,13 +77,15 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Create debug keystore
         run: |
-          mkdir -p ~/.android
-          rm -f ~/.android/debug.keystore
-          keytool -genkeypair -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          for dir in "$HOME/.android" "$HOME/.config/.android"; do
+            mkdir -p "$dir"
+            rm -f "$dir/debug.keystore"
+            keytool -genkeypair -keystore "$dir/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          done
       - name: Assemble ${{ matrix.build_type }} APK
         run: |
           build_type=${{ matrix.build_type }}
-          ./gradlew :core:app:assemble${build_type^} -x :core:app:validateSigning${build_type^} --stacktrace
+          ./gradlew :core:app:assemble${build_type^}
       - name: Copy ${{ matrix.build_type }} APK
         run: |
           cp core/app/build/outputs/apk/${{ matrix.build_type }}/app-*.apk ./
